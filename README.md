@@ -6,4 +6,4 @@
 
 ### Link to the dashboard: [Flexdashboard](https://patrick102.shinyapps.io/flexdashboard/)
 
-### ### Short description: [Report](https://github.com/allsuitablenamesarealreadytaken/Covid-Tracker-dashboard/blob/main/Report.pdf)
+### ### Short description: [Report](https://github.com/patrickmolina1/Dashboard/blob/main/Report.pdf)
