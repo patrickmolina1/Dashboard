@@ -1,0 +1,84 @@
+/* Body and General Styles */
+body {
+  font-family: Arial, sans-serif;
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #0056b3;
+}
+
+.sidebar .section .input {
+  margin-bottom: 20px;
+}
+
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-title {
+  background-color: #0056b3;
+  color: white;
+  padding: 10px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.container-fluid {
+  padding: 20px;
+}
+
+/* Table Styles */
+.dataTables_wrapper {
+  width: 100%;
+  margin: 20px 0;
+}
+
+table.dataTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table.dataTable thead th {
+  background-color: #0056b3;
+  color: white;
+}
+
+table.dataTable tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+table.dataTable tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Plotly Plot Styles */
+.plotly {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* Gauge Styles */
+.gauge .gauge-back {
+  fill: #e0e0e0;
+}
+
+.gauge .gauge-fill {
+  fill: #0056b3;
+}

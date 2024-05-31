@@ -1,0 +1,301 @@
+---
+title: "AI and Data Science Salaries"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: cosmo
+    css: custom.css
+    logo: "C:/Users/patri/Data Visualization Assignment 4/putLogoColor.png" 
+runtime: shiny
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(plotly)
+library(DT)
+library(dplyr)
+library(leaflet)
+
+# Load dataset
+salaries <- read.csv("salaries.csv")
+salaries <- na.omit(salaries)
+
+# Convert relevant columns to factors
+salaries$experience_level <- factor(salaries$experience_level, levels = c("EN", "MI", "SE", "EX"))
+salaries$employment_type <- factor(salaries$employment_type, levels = c("PT", "FT", "CT", "FL"))
+salaries$remote_ratio <- factor(salaries$remote_ratio)
+salaries$company_size <- factor(salaries$company_size, levels = c("S", "M", "L"))
+
+# Define country coordinates for the map (You can expand this list)
+country_coords <- data.frame(
+  country = c('US', 'GB', 'CA', 'IE', 'TR', 'IL', 'IN', 'FI', 'DE', 'LU', 'ZA',
+              'KE', 'RS', 'PT', 'AR', 'GR', 'NZ', 'UA', 'LT', 'AU', 'FR', 'ES',
+              'SE', 'MX', 'PL', 'NL', 'DK', 'LV', 'AT', 'BR', 'CH', 'AE', 'SA',
+              'EG', 'PH', 'OM', 'BA', 'IT', 'AS', 'EE', 'MT', 'HU', 'LB', 'RO',
+              'VN', 'NG', 'GI', 'CO', 'SI', 'MU', 'RU', 'KR', 'CZ', 'QA', 'GH',
+              'AD', 'EC', 'NO', 'JP', 'HK', 'CF', 'SG', 'TH', 'HR', 'AM', 'PK',
+              'IR', 'BS', 'PR', 'BE', 'ID', 'MY', 'HN', 'DZ', 'IQ', 'CN', 'CL',
+              'MD'),
+  lat = c(37.0902, 55.3781, 56.1304, 53.1424, 38.9637, 31.0461, 20.5937, 61.9241, 51.1657, 49.8153, -30.5595,
+          -1.2921, 44.0165, 39.3999, -38.4161, 39.0742, -40.9006, 48.3794, 55.1694, -25.2744, 46.6034, 40.4637,
+          60.1282, 23.6345, 51.9194, 52.1326, 56.2639, 56.8796, 47.5162, -14.2350, 46.8182, 23.4241, 23.8859,
+          26.8206, 12.8797, 21.5126, 43.9159, 41.8719, -14.2710, 58.5953, 35.9375, 47.1625, 33.8547, 45.9432,
+          14.0583, 9.081999, 36.1408, 4.5709, 46.1512, -20.3484, 61.5240, 35.9078, 49.8175, 25.3548, 7.9465,
+          42.5462, -1.8312, 60.4720, 36.2048, 22.3193, 6.6111, 1.3521, 15.8700, 45.1, 40.0691, 30.3753,
+          32.4279, 25.0343, 18.2208, 50.8503, -0.7893, 4.2105, 15.1990, 28.0339, 33.2232, 35.8617, -35.6751,
+          47.4116),
+  lon = c(-95.7129, -3.4360, -106.3468, -7.6921, 35.2433, 34.8516, 78.9629, 25.7482, 10.4515, 6.1296, 22.9375,
+          36.8219, 21.0059, -8.2245, -63.6167, 21.8243, 174.8859, 31.1656, 23.8813, 133.7751, 2.2137, -3.7492,
+          18.6435, -102.5528, 19.1451, 5.2913, 9.5018, 24.6032, 14.5501, -51.9253, 8.2275, 53.8478, 45.0792,
+          30.8025, 121.7740, 55.9233, 17.6791, 12.5674, -170.1322, 25.0136, 14.3754, 19.5033, 35.8623, 24.9668,
+          108.2772, 8.6753, -5.3536, -74.2973, 14.9955, 57.5522, 105.3188, 127.7669, 15.4729, 51.1839, -1.0232,
+          1.6016, -78.1834, 8.4689, 138.2529, 114.1694, 20.9394, 103.8198, 100.9925, 15.2, 45.0382, 69.3451,
+          53.6880, -77.3963, -66.5901, 4.3517, 113.9213, 101.9758, -86.2419, 1.6596, 43.6793, 104.1954, -71.5429,
+          28.3699)
+)
+
+```
+
+Overview
+=======================================================================
+
+Column {data-width=350}
+-------------------------------------
+
+
+```{r}
+selectInput("experience", "Experience Level:", 
+            choices = levels(salaries$experience_level), 
+            selected = "SE")
+```
+
+```{r}
+selectInput("employment", "Employment Type:", 
+            choices = levels(salaries$employment_type), 
+            selected = "FT")
+```
+
+```{r}
+selectInput("remote", "Remote Work Ratio:", 
+            choices = levels(salaries$remote_ratio), 
+            selected = "100")
+```
+
+```{r}
+selectInput("company_size", "Company Size:", 
+            choices = levels(salaries$company_size), 
+            selected = "L")
+
+```
+
+
+Column {data-width=650}
+-------------------------------------
+
+### Salary Distribution
+
+```{r}
+
+renderPlotly({
+  filtered_data <- salaries %>% 
+    filter(experience_level == input$experience,
+           employment_type == input$employment,
+           remote_ratio == input$remote,
+           company_size == input$company_size)
+  
+  p <- ggplot(filtered_data, aes(x=salary_in_usd)) +
+    geom_histogram(binwidth=5000, fill="#0073C2FF", color="white") +
+    theme_minimal() +
+    labs(title="Distribution of Salaries in USD", x="Salary (USD)", y="Count")
+  
+  ggplotly(p)
+})
+
+```
+
+
+Table
+=======================================================================
+```{r}
+renderDataTable({
+  datatable(salaries, selection = "single", options = list(pageLength = 10, autoWidth = TRUE))
+})
+
+```
+
+Experience Level
+=======================================================================
+```{r}
+renderPlotly({
+  p <- ggplot(salaries, aes(x=experience_level, y=salary_in_usd, fill=experience_level)) +
+    geom_boxplot() +
+    theme_minimal() +
+    labs(title="Salary by Experience Level", x="Experience Level", y="Salary (USD)") +
+    scale_fill_brewer(palette="Set3")
+  
+  ggplotly(p)
+})
+```
+
+
+Employment Type
+=======================================================================
+```{r}
+renderPlotly({
+  p <- ggplot(salaries, aes(x=employment_type, y=salary_in_usd, fill=employment_type)) +
+    geom_bar(stat="summary", fun="mean") +
+    theme_minimal() +
+    labs(title="Average Salary by Employment Type", x="Employment Type", y="Average Salary (USD)") +
+    scale_fill_brewer(palette="Set2")
+  
+  ggplotly(p)
+})
+
+```
+
+
+Salary Distribution
+=======================================================================
+
+Column {data-width=350}
+-------------------------------------
+
+```{r}
+selectInput("job_title", "Job Title:", 
+            choices = unique(salaries$job_title), 
+            selected = unique(salaries$job_title)[1])
+
+```
+
+Column {data-width=1000}
+-------------------------------------
+```{r}
+renderPlotly({
+  filtered_data <- salaries %>% 
+    filter(job_title == input$job_title)
+  
+  avg_salaries <- filtered_data %>%
+    group_by(company_location) %>%
+    summarise(avg_salary = mean(salary_in_usd, na.rm = TRUE)) %>%
+    arrange(desc(avg_salary)) %>%
+    slice_head(n = 10)
+  
+  top_countries_data <- filtered_data %>%
+    filter(company_location %in% avg_salaries$company_location)
+  
+  p <- ggplot(top_countries_data, aes(x=company_location, y=salary_in_usd, color=company_location)) +
+    geom_point() +
+    geom_line(aes(group=company_location)) +
+    theme_minimal() +
+    labs(title="Top 10 Countries with Highest Salaries", x="Country", y="Salary (USD)") +
+    theme(legend.title = element_blank())
+  
+  ggplotly(p)
+})
+
+```
+
+Column {data-width=350}
+-------------------------------------
+Average Salary
+
+```{r}
+renderGauge({
+  avg_salary <- salaries %>% 
+    filter(job_title == input$job_title) %>%
+    summarise(avg_salary = mean(salary_in_usd, na.rm = TRUE)) %>%
+    pull(avg_salary)
+  
+  gauge(avg_salary, min = 0, max = max(salaries$salary_in_usd), 
+        gaugeSectors(success = c(0, avg_salary/2), warning = c(avg_salary/2, avg_salary), danger = c(avg_salary, max(salaries$salary_in_usd))))
+})
+```
+
+Column {data-width=350}
+-------------------------------------
+Median Salary
+
+```{r}
+renderGauge({
+  median_salary <- salaries %>% 
+    filter(job_title == input$job_title) %>%
+    summarise(median_salary = median(salary_in_usd, na.rm = TRUE)) %>%
+    pull(median_salary)
+  
+  gauge(median_salary, min = 0, max = max(salaries$salary_in_usd), 
+        gaugeSectors(success = c(0, median_salary/2), warning = c(median_salary/2, median_salary), danger = c(median_salary, max(salaries$salary_in_usd))))
+})
+
+```
+
+Map
+=======================================================================
+Column {data-width=350}
+-------------------------------------
+
+```{r}
+selectInput("job_title", "Job Title:", 
+            choices = unique(salaries$job_title), 
+            selected = unique(salaries$job_title)[1])
+
+```
+
+
+```{r}
+renderLeaflet({
+  map_data <- salaries %>%
+    filter(job_title == input$job_title_map) %>%
+    group_by(company_location) %>%
+    summarize(avg_salary = mean(salary_in_usd, na.rm = TRUE)) %>%
+    left_join(country_coords, by = c("company_location" = "country"))
+  
+  leaflet(map_data) %>%
+    addTiles() %>%
+    addCircles(lng = ~lon, lat = ~lat, weight = 1,
+               radius = ~sqrt(avg_salary) * 500,
+               popup = ~paste(company_location, "<br>", "Average Salary: $", round(avg_salary, 2)))
+})
+
+```
+
+
+About
+=======================================================================
+
+This website anonymously gathers salary data from professionals worldwide in the fields of AI, ML, and Data Science, making the information publicly accessible for anyone to use, share, and explore.
+
+The main objective is to provide data that offers better insights into global salary trends. This helps new entrants, seasoned professionals, hiring managers, recruiters, startup founders, and individuals considering a career change make well-informed decisions.
+
+## Dataset Description
+
+The dataset includes 11 columns with the following details:
+
+- **work_year**: The year in which the salary was paid.
+- **experience_level**: The job experience level during the year, categorized as:
+    - **EN**: Entry-level / Junior
+    - **MI**: Mid-level / Intermediate
+    - **SE**: Senior-level / Expert
+    - **EX**: Executive-level / Director
+- **employment_type**: The employment type for the role, including:
+    - **PT**: Part-time
+    - **FT**: Full-time
+    - **CT**: Contract
+    - **FL**: Freelance
+- **job_title**: The job title during the year.
+- **salary**: The total gross salary amount paid.
+- **salary_currency**: The currency of the salary paid, represented as an ISO 4217 currency code.
+- **salary_in_usd**: The salary converted to USD, based on the average exchange rate for the respective year via fxdata.foorilla.com.
+- **employee_residence**: The primary country of residence of the employee during the work year, represented as an ISO 3166 country code.
+- **remote_ratio**: The proportion of work done remotely, categorized as:
+    - **0**: No remote work (less than 20%)
+    - **50**: Partially remote/hybrid
+    - **100**: Fully remote (more than 80%)
+- **company_location**: The country of the employer's main office or contracting branch, represented as an ISO 3166 country code.
+- **company_size**: The average number of employees at the company during the year, categorized as:
+    - **S**: Small (less than 50 employees)
+    - **M**: Medium (50 to 250 employees)
+    - **L**: Large (more than 250 employees)
+
